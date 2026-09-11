@@ -976,15 +976,19 @@ function refreshAllSchedules() {
 }
 
 /* ==========================================================================
-   Full UI Refresh Orchestrator
+   Live Data Refresh Orchestrator (Vehicle GPS, Map & Predictions every 15s)
    ========================================================================== */
-async function refreshUi(manual = false) {
+const LIVE_REFRESH_INTERVAL_MS = 15000;
+
+async function refreshLiveData(manual = false) {
   const refreshBtn = $('refresh-btn');
   const refreshIcon = $('refresh-icon');
 
+  if (refreshIcon) {
+    refreshIcon.classList.add('spinning');
+  }
   if (manual && refreshBtn) {
     refreshBtn.disabled = true;
-    if (refreshIcon) refreshIcon.classList.add('spinning');
   }
 
   const timeEl = $('currentTime');
@@ -996,18 +1000,22 @@ async function refreshUi(manual = false) {
   }
 
   try {
-    await Promise.all([
+    await Promise.allSettled([
       fetchVehicleLocations(),
       fetchPredictions()
     ]);
   } catch (e) {
-    console.warn("Refresh error:", e);
+    console.warn("Live refresh error:", e);
   } finally {
+    if (refreshIcon) {
+      setTimeout(() => {
+        refreshIcon.classList.remove('spinning');
+      }, 600);
+    }
     if (manual && refreshBtn) {
       setTimeout(() => {
         refreshBtn.disabled = false;
-        if (refreshIcon) refreshIcon.classList.remove('spinning');
-      }, 500);
+      }, 600);
     }
   }
 }
@@ -1018,7 +1026,10 @@ async function refreshUi(manual = false) {
 function setupEventHandlers() {
   const refreshBtn = $('refresh-btn');
   if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => refreshUi(true));
+    refreshBtn.addEventListener('click', async () => {
+      await refreshLiveData(true);
+      refreshAllSchedules();
+    });
   }
 
   const recenterBtn = $('recenter-btn');
@@ -1107,25 +1118,25 @@ function init() {
   initMap();
   setupEventHandlers();
 
-  refreshUi();
+  // Initial load
+  refreshLiveData();
   refreshAllSchedules();
 
+  // Clock ticker every second
   setInterval(() => {
     const timeEl = $('currentTime');
     if (timeEl) timeEl.innerText = getCurrentTime();
   }, 1000);
 
+  // Live GPS positions, bus map pins & arrival predictions refresh every 15 seconds
   setInterval(() => {
-    fetchVehicleLocations();
-  }, 12000);
+    refreshLiveData();
+  }, LIVE_REFRESH_INTERVAL_MS);
 
-  setInterval(() => {
-    fetchPredictions();
-  }, 30000);
-
+  // Daily timetable schedules only re-evaluate cell highlights once per minute (cached in-memory)
   setInterval(() => {
     refreshAllSchedules();
-  }, 300000);
+  }, 60000);
 }
 
 if (document.readyState === 'loading') {
