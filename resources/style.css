@@ -915,3 +915,21 @@ table.timetable td.next {
   align-items: center;
   gap: 3px;
 }
+
+/* Major Transfer Stop Pins */
+.stop-pin.transfer-pin {
+  width: 26px;
+  height: 26px;
+  background: var(--bg-card);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.stop-pin.transfer-nb {
+  border: 2px solid var(--brand-nb);
+  color: var(--brand-nb);
+}
+
+.stop-pin.transfer-sb {
+  border: 2px solid var(--brand-sb);
+  color: var(--brand-sb);
+}
