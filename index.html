@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TTC 2000 — Route 103 Mount Pleasant North</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="resources/style.css">
+</head>
+<body>
+  <!-- Top App Navigation / Header -->
+  <header class="app-header">
+    <div class="header-branding">
+      <div class="route-badge">103</div>
+      <div class="route-meta">
+        <h1 class="app-title">TTC 103 Mount Pleasant North</h1>
+        <div class="app-subtitle">
+          <span id="active-buses-badge" class="badge badge-subtle">Loading buses…</span>
+          <span class="dot-separator">•</span>
+          <span id="last-updated-text" class="last-updated">Updating…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Proximity Quick Badges for Home Stops -->
+      <div class="home-pills-container">
+        <button id="pill-home-nb" class="home-pill pill-nb" title="Click to focus Home (Blythwood) on map">
+          <span class="pill-indicator nb-dot"></span>
+          <span class="pill-title">Home NB:</span>
+          <span id="pill-nb-dist" class="pill-dist">--</span>
+          <span id="pill-nb-time" class="pill-time">--</span>
+        </button>
+        <button id="pill-home-sb" class="home-pill pill-sb" title="Click to focus Home (Stibbard) on map">
+          <span class="pill-indicator sb-dot"></span>
+          <span class="pill-title">Home SB:</span>
+          <span id="pill-sb-dist" class="pill-dist">--</span>
+          <span id="pill-sb-time" class="pill-time">--</span>
+        </button>
+      </div>
+
+      <div class="header-right-group">
+        <div id="currentTime" class="current-time">--:--:--</div>
+        <button id="refresh-btn" class="refresh-btn" title="Refresh Live Bus & Schedule Data" aria-label="Refresh">
+          <svg id="refresh-icon" class="refresh-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile View Switcher (Visible on small screens) -->
+  <div class="mobile-view-tabs" role="tablist">
+    <button class="view-tab active" data-view="split">Split View</button>
+    <button class="view-tab" data-view="map">Live Map</button>
+    <button class="view-tab" data-view="schedules">Arrivals & Schedule</button>
+  </div>
+
+  <!-- Main Dashboard Container -->
+  <main class="dashboard-layout" id="dashboard-container">
+    <!-- Map Section -->
+    <section class="map-container-wrapper" id="map-section">
+      <div id="map"></div>
+
+      <!-- Floating Map Overlays -->
+      <div class="map-floating-controls">
+        <div class="map-filter-group">
+          <button class="map-filter-btn active" data-filter="all">All Buses</button>
+          <button class="map-filter-btn" data-filter="northbound">Northbound</button>
+          <button class="map-filter-btn" data-filter="southbound">Southbound</button>
+        </div>
+        <div class="map-action-group">
+          <button id="recenter-btn" class="map-action-btn" title="Recenter map on full route">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+            </svg>
+            Recenter
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Status Overlay (e.g. Offline / No buses) -->
+      <div id="map-status-overlay" class="map-status-overlay" hidden>
+        <div class="status-overlay-pill">
+          <span id="map-status-msg">Fetching live bus locations…</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transit Boards / Stop Cards & Timetables Section -->
+    <section class="schedules-container-wrapper" id="schedules-section">
+      <!-- Northbound Column -->
+      <div class="direction-column nb-column" id="north-bound-container">
+        <div class="direction-header">
+          <div class="direction-badge nb-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+            </svg>
+            Northbound
+          </div>
+          <span class="direction-dest">towards Doncliffe</span>
+        </div>
+
+        <!-- Stop 1: Eglinton Station -->
+        <article class="stop-card" id="card-nb-eglinton">
+          <div class="stop-card-header">
+            <div class="stop-title-wrap">
+              <h3 class="stop-name">Eglinton Station</h3>
+              <span class="stop-tag-badge">Stop #14674</span>
+            </div>
+            <button class="btn-locate-stop" data-lat="43.7055699" data-lon="-79.39946" data-title="Eglinton Station" title="Show on map">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Proximity & Bus Approximation Info -->
+          <div class="proximity-banner" id="nb-eglinton-proximity">
+            <span class="proximity-icon">🚌</span>
+            <span class="proximity-text">Calculating nearest bus…</span>
+          </div>
+          <!-- Next Bus Arrival text -->
+          <div class="next-bus-info" id="nb-stClairStationAtLowerPlatform-nextbus">
+            <span class="loading-pulse">Loading arrival predictions…</span>
+          </div>
+          <!-- Daily Schedule Timetable -->
+          <div class="timetable-wrap">
+            <div class="timetable-label">Today's Timetable</div>
+            <table class="timetable">
+              <tbody id="nb-stClairStationAtLowerPlatform-schedule"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- Stop 2: Mt Pleasant Rd at Eglinton Ave East -->
+        <article class="stop-card" id="card-nb-eglintonEast">
+          <div class="stop-card-header">
+            <div class="stop-title-wrap">
+              <h3 class="stop-name">Mt Pleasant Rd at Eglinton Ave East</h3>
+              <span class="stop-tag-badge">Stop #5813</span>
+            </div>
+            <button class="btn-locate-stop" data-lat="43.7089099" data-lon="-79.3902" data-title="Mt Pleasant at Eglinton East" title="Show on map">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="proximity-banner" id="nb-eglintonEast-proximity">
+            <span class="proximity-icon">🚌</span>
+            <span class="proximity-text">Calculating nearest bus…</span>
+          </div>
+          <div class="next-bus-info" id="nb-mtPleasantRdAtEglintonAveEastNorthSide-nextbus">
+            <span class="loading-pulse">Loading arrival predictions…</span>
+          </div>
+          <div class="timetable-wrap">
+            <div class="timetable-label">Today's Timetable</div>
+            <table class="timetable">
+              <tbody id="nb-mtPleasantRdAtEglintonAveEastNorthSide-schedule"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- Stop 3: Home (Mt Pleasant Rd at Blythwood Rd) -->
+        <article class="stop-card home-card" id="card-nb-home">
+          <div class="stop-card-header">
+            <div class="stop-title-wrap">
+              <div class="home-title-row">
+                <span class="home-badge">HOME</span>
+                <h3 class="stop-name">Mt Pleasant Rd at Blythwood Rd</h3>
+              </div>
+              <span class="stop-tag-badge">Stop #5804</span>
+            </div>
+            <button class="btn-locate-stop" data-lat="43.7177699" data-lon="-79.39399" data-title="Home (Blythwood Rd)" title="Show on map">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="proximity-banner highlight-proximity" id="nb-home-proximity">
+            <span class="proximity-icon">📍</span>
+            <span class="proximity-text">Calculating nearest bus to Home…</span>
+          </div>
+          <div class="next-bus-info" id="nb-mtPleasantRdatBlythwoodRd-nextbus">
+            <span class="loading-pulse">Loading arrival predictions…</span>
+          </div>
+          <div class="timetable-wrap">
+            <div class="timetable-label">Today's Timetable</div>
+            <table class="timetable">
+              <tbody id="nb-mtPleasantRdatBlythwoodRd-schedule"></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+
+      <!-- Southbound Column -->
+      <div class="direction-column sb-column" id="south-bound-container">
+        <div class="direction-header">
+          <div class="direction-badge sb-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 20l8-8h-5v-8h-6v8h-5z"/>
+            </svg>
+            Southbound
+          </div>
+          <span class="direction-dest">towards Eglinton Station</span>
+        </div>
+
+        <!-- Stop 1: Doncliffe Loop -->
+        <article class="stop-card" id="card-sb-doncliffe">
+          <div class="stop-card-header">
+            <div class="stop-title-wrap">
+              <h3 class="stop-name">Doncliffe Loop at Glen Echo Rd</h3>
+              <span class="stop-tag-badge">Stop #5518</span>
+            </div>
+            <button class="btn-locate-stop" data-lat="43.7346699" data-lon="-79.40028" data-title="Doncliffe Loop" title="Show on map">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="proximity-banner" id="sb-doncliffe-proximity">
+            <span class="proximity-icon">🚌</span>
+            <span class="proximity-text">Calculating nearest bus…</span>
+          </div>
+          <div class="next-bus-info" id="sb-doncliffeLoopAtGlenEchoRd-nextbus">
+            <span class="loading-pulse">Loading arrival predictions…</span>
+          </div>
+          <div class="timetable-wrap">
+            <div class="timetable-label">Today's Timetable</div>
+            <table class="timetable">
+              <tbody id="sb-doncliffeLoopAtGlenEchoRd-schedule"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- Stop 2: Lawrence Ave -->
+        <article class="stop-card" id="card-sb-lawrence">
+          <div class="stop-card-header">
+            <div class="stop-title-wrap">
+              <h3 class="stop-name">Mt Pleasant Rd at Lawrence Ave East</h3>
+              <span class="stop-tag-badge">Stop #5827</span>
+            </div>
+            <button class="btn-locate-stop" data-lat="43.7257499" data-lon="-79.39716" data-title="Lawrence Ave" title="Show on map">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="proximity-banner" id="sb-lawrence-proximity">
+            <span class="proximity-icon">🚌</span>
+            <span class="proximity-text">Calculating nearest bus…</span>
+          </div>
+          <div class="next-bus-info" id="sb-mtPleasantRdAtLawrenceAveEastSouthSide-nextbus">
+            <span class="loading-pulse">Loading arrival predictions…</span>
+          </div>
+          <div class="timetable-wrap">
+            <div class="timetable-label">Today's Timetable</div>
+            <table class="timetable">
+              <tbody id="sb-mtPleasantRdAtLawrenceAveEastSouthSide-schedule"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- Stop 3: Home (Mt Pleasant Rd at Stibbard Ave) -->
+        <article class="stop-card home-card" id="card-sb-home">
+          <div class="stop-card-header">
+            <div class="stop-title-wrap">
+              <div class="home-title-row">
+                <span class="home-badge">HOME</span>
+                <h3 class="stop-name">Mt Pleasant Rd at Stibbard Ave</h3>
+              </div>
+              <span class="stop-tag-badge">Stop #5846</span>
+            </div>
+            <button class="btn-locate-stop" data-lat="43.71705" data-lon="-79.3938199" data-title="Home (Stibbard Ave)" title="Show on map">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="proximity-banner highlight-proximity" id="sb-home-proximity">
+            <span class="proximity-icon">📍</span>
+            <span class="proximity-text">Calculating nearest bus to Home…</span>
+          </div>
+          <div class="next-bus-info" id="sb-mtPleasantRdAtStibbardAve-nextbus">
+            <span class="loading-pulse">Loading arrival predictions…</span>
+          </div>
+          <div class="timetable-wrap">
+            <div class="timetable-label">Today's Timetable</div>
+            <table class="timetable">
+              <tbody id="sb-mtPleasantRdAtStibbardAve-schedule"></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application JS Modules -->
+  <script type="module" src="src/script.js"></script>
+</body>
+</html>

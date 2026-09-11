@@ -1,0 +1,917 @@
+:root {
+  --bg-page: #0f172a;
+  --bg-card: #1e293b;
+  --bg-card-hover: #24344d;
+  --bg-secondary: #182234;
+  --border-color: #334155;
+  --border-focus: #3b82f6;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --ttc-red: #d32f2f;
+  --ttc-red-light: #ef4444;
+  --brand-nb: #10b981;
+  --brand-nb-bg: rgba(16, 185, 129, 0.15);
+  --brand-sb: #8b5cf6;
+  --brand-sb-bg: rgba(139, 92, 246, 0.15);
+  --accent-gold: #f59e0b;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-page: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --bg-secondary: #e2e8f0;
+    --border-color: #cbd5e1;
+    --border-focus: #2563eb;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    --brand-nb-bg: rgba(16, 185, 129, 0.12);
+    --brand-sb-bg: rgba(139, 92, 246, 0.12);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   Header / Navigation Bar
+   ========================================================================== */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.route-badge {
+  background-color: var(--ttc-red);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 5px rgba(211, 47, 47, 0.4);
+}
+
+.route-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text-primary);
+}
+
+.app-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.dot-separator {
+  color: var(--text-muted);
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.badge-subtle {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Quick Proximity Home Pills */
+.home-pills-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  padding: 4px 11px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.home-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.home-pill:active {
+  transform: translateY(0);
+}
+
+.pill-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.nb-dot {
+  background-color: var(--brand-nb);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+
+.sb-dot {
+  background-color: var(--brand-sb);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+}
+
+.pill-title {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.pill-dist {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pill-time {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.header-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.current-time {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  background: var(--bg-secondary);
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.refresh-btn:hover {
+  background: var(--border-color);
+  transform: scale(1.05);
+}
+
+.refresh-btn:active {
+  transform: scale(0.95);
+}
+
+.refresh-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Mobile Tabs
+   ========================================================================== */
+.mobile-view-tabs {
+  display: none;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 12px;
+  gap: 8px;
+}
+
+.view-tab {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-tab.active {
+  background: var(--ttc-red);
+  color: #ffffff;
+  border-color: var(--ttc-red);
+}
+
+/* ==========================================================================
+   Main Dashboard Layout
+   ========================================================================== */
+.dashboard-layout {
+  display: flex;
+  height: calc(100vh - 61px);
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Map Section */
+.map-container-wrapper {
+  flex: 1 1 50%;
+  position: relative;
+  height: 100%;
+  border-right: 1px solid var(--border-color);
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-secondary);
+}
+
+/* Floating Controls on Map */
+.map-floating-controls {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 900;
+  pointer-events: none;
+  gap: 8px;
+}
+
+.map-filter-group,
+.map-action-group {
+  display: inline-flex;
+  pointer-events: auto;
+  gap: 4px;
+  background: var(--bg-card);
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.map-filter-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.map-filter-btn.active {
+  background: var(--ttc-red);
+  color: #ffffff;
+}
+
+.map-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.map-action-btn:hover {
+  background: var(--border-color);
+}
+
+.map-status-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  pointer-events: none;
+}
+
+.status-overlay-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Schedules & Stop Cards Container
+   ========================================================================== */
+.schedules-container-wrapper {
+  flex: 1 1 50%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  background-color: var(--bg-page);
+}
+
+.direction-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.direction-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.direction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.nb-badge {
+  background: var(--brand-nb);
+  color: #ffffff;
+}
+
+.sb-badge {
+  background: var(--brand-sb);
+  color: #ffffff;
+}
+
+.direction-dest {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* Stop Card Styling */
+.stop-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.stop-card:hover {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-md);
+}
+
+.stop-card.home-card {
+  border: 1.5px solid var(--accent-gold);
+  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.04) 100%);
+}
+
+.stop-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.stop-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.home-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-badge {
+  background-color: var(--accent-gold);
+  color: #000000;
+  font-weight: 800;
+  font-size: 0.64rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.stop-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.stop-tag-badge {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-locate-stop {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-locate-stop:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+  transform: scale(1.08);
+}
+
+/* Proximity & Distance Banner */
+.proximity-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.proximity-banner.highlight-proximity {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--text-primary);
+}
+
+.proximity-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.proximity-text {
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.proximity-text b {
+  color: var(--text-primary);
+}
+
+/* Next Bus Arrival Info */
+.next-bus-info {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  padding: 2px 0;
+}
+
+.minutes {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--ttc-red-light);
+  font-variant-numeric: tabular-nums;
+  margin: 0 2px;
+}
+
+.loading-pulse {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Timetable Table */
+.timetable-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timetable-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+
+table.timetable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+table.timetable td {
+  border: 1px solid var(--border-color);
+  padding: 6px 4px;
+  text-align: center;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  transition: background 0.15s ease;
+}
+
+table.timetable td.missed {
+  background: rgba(100, 116, 139, 0.2);
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+table.timetable td.next {
+  background: rgba(16, 185, 129, 0.25);
+  color: var(--brand-nb);
+  font-weight: 700;
+  border: 1.5px solid var(--brand-nb);
+}
+
+/* ==========================================================================
+   Leaflet Custom Elements & Markers
+   ========================================================================== */
+.custom-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.custom-pin:hover {
+  transform: scale(1.15);
+}
+
+/* Bus Marker Pin */
+.bus-marker-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bus-pin {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ttc-red);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.bus-pin.dir-nb {
+  background: #2563eb; /* Northbound blue */
+}
+
+.bus-pin.dir-sb {
+  background: #7c3aed; /* Southbound purple */
+}
+
+.bus-pin::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0.6;
+  animation: ripple 2s infinite ease-out;
+}
+
+@keyframes ripple {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.bus-badge-label {
+  margin-top: 2px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Stop Marker Pins */
+.stop-pin {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.stop-pin.home-stop-pin {
+  width: 28px;
+  height: 28px;
+  background: var(--accent-gold);
+  color: #000000;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
+.stop-pin.terminal-pin {
+  width: 26px;
+  height: 26px;
+  background: var(--ttc-red);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+/* Leaflet Popup Tweaks */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 4px !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-card) !important;
+}
+
+.popup-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.82rem;
+  padding: 4px;
+  min-width: 170px;
+}
+
+.popup-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.popup-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.popup-val {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 900px) {
+  .dashboard-layout {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  .map-container-wrapper {
+    flex: none;
+    height: 45vh;
+    min-height: 280px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .schedules-container-wrapper {
+    flex: none;
+    height: auto;
+    overflow: visible;
+    flex-direction: column;
+  }
+
+  .mobile-view-tabs {
+    display: flex;
+  }
+
+  /* View tab visibility modes */
+  .dashboard-layout[data-active-view="map"] .map-container-wrapper {
+    height: calc(100vh - 105px);
+    display: block;
+  }
+  .dashboard-layout[data-active-view="map"] .schedules-container-wrapper {
+    display: none;
+  }
+
+  .dashboard-layout[data-active-view="schedules"] .map-container-wrapper {
+    display: none;
+  }
+  .dashboard-layout[data-active-view="schedules"] .schedules-container-wrapper {
+    display: flex;
+    height: calc(100vh - 105px);
+  }
+
+  .home-pills-container {
+    width: 100%;
+    order: 3;
+    justify-content: space-between;
+  }
+
+  .home-pill {
+    flex: 1;
+  }
+}
+
+/* Fix SVG Rotation Origin in Bus Pins */
+.bus-pin svg {
+  display: block;
+  transform-origin: 50% 50%;
+  transition: transform 0.25s ease;
+}
+
+/* Status Badges for Live Proximity & Predictions */
+.badge-live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.badge-at-stop {
+  background-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.5);
+  animation: pulse-badge 1.8s infinite;
+}
+
+.badge-just-left {
+  background-color: #475569;
+  color: #e2e8f0;
+}
+
+.badge-layover {
+  background-color: #d97706;
+  color: #ffffff;
+  box-shadow: 0 0 6px rgba(217, 119, 6, 0.4);
+}
+
+.badge-en-route {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+@keyframes pulse-badge {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Enhanced Bus Badge Label on Map */
+.bus-badge-label {
+  margin-top: 2px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
