@@ -812,29 +812,40 @@ async function populateNextBus(stop) {
 }
 
 /* ==========================================================================
-   Daily Timetable Schedules (Multi-layer Cache + Fallback)
+   Daily Timetable Schedules (Multi-layer Cache, Daily Refresh & Fallback)
    ========================================================================== */
-async function fetchSchedule(stopCode, direction) {
+let lastCalendarDate = new Date().toISOString().split('T')[0];
+
+async function fetchSchedule(stopCode, direction, forceRefresh = false) {
   const cacheKey = `${direction}_${stopCode}`;
+  const todayStr = new Date().toISOString().split('T')[0]; // e.g. "2026-09-11"
 
-  if (scheduleMemoryCache.has(cacheKey)) {
-    return scheduleMemoryCache.get(cacheKey);
-  }
-
-  const storageKey = `ttc_schedule_103_${cacheKey}`;
-  try {
-    const cachedItem = localStorage.getItem(storageKey);
-    if (cachedItem) {
-      const parsed = JSON.parse(cachedItem);
-      if (parsed.timestamp && (Date.now() - parsed.timestamp < 12 * 60 * 60 * 1000) && parsed.data) {
-        scheduleMemoryCache.set(cacheKey, parsed.data);
-        return parsed.data;
-      }
+  // 1. In-memory cache (valid only for today's date)
+  if (!forceRefresh && scheduleMemoryCache.has(cacheKey)) {
+    const mem = scheduleMemoryCache.get(cacheKey);
+    if (mem && mem.date === todayStr && mem.data) {
+      return mem.data;
     }
-  } catch (e) {
-    console.warn("Could not read localStorage cache:", e);
   }
 
+  // 2. LocalStorage cache (valid only for today's date and < 24h)
+  const storageKey = `ttc_schedule_103_${cacheKey}`;
+  if (!forceRefresh) {
+    try {
+      const cachedItem = localStorage.getItem(storageKey);
+      if (cachedItem) {
+        const parsed = JSON.parse(cachedItem);
+        if (parsed.date === todayStr && (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) && parsed.data) {
+          scheduleMemoryCache.set(cacheKey, { date: todayStr, data: parsed.data });
+          return parsed.data;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not read localStorage cache:", e);
+    }
+  }
+
+  // 3. Network fetch from official TTC API with retry
   const maxAttempts = 4;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -843,9 +854,13 @@ async function fetchSchedule(stopCode, direction) {
         const responseData = await response.json();
         const schedule = responseData["103"];
         if (schedule && Array.isArray(schedule) && schedule.length > 0) {
-          scheduleMemoryCache.set(cacheKey, schedule);
+          scheduleMemoryCache.set(cacheKey, { date: todayStr, data: schedule });
           try {
-            localStorage.setItem(storageKey, JSON.stringify({ timestamp: Date.now(), data: schedule }));
+            localStorage.setItem(storageKey, JSON.stringify({
+              date: todayStr,
+              timestamp: Date.now(),
+              data: schedule
+            }));
           } catch (e) {}
           return schedule;
         }
@@ -859,21 +874,22 @@ async function fetchSchedule(stopCode, direction) {
     }
   }
 
-  // Fallback cache
+  // 4. Stale cache fallback (if network is temporarily offline)
   try {
     const stale = localStorage.getItem(storageKey);
     if (stale) {
       const parsed = JSON.parse(stale);
       if (parsed.data) {
-        scheduleMemoryCache.set(cacheKey, parsed.data);
+        scheduleMemoryCache.set(cacheKey, { date: todayStr, data: parsed.data });
         return parsed.data;
       }
     }
   } catch (e) {}
 
+  // 5. Static fallback schedules
   if (fallbackSchedules && fallbackSchedules[cacheKey]) {
     const fallback = fallbackSchedules[cacheKey];
-    scheduleMemoryCache.set(cacheKey, fallback);
+    scheduleMemoryCache.set(cacheKey, { date: todayStr, data: fallback });
     return fallback;
   }
 
@@ -891,12 +907,12 @@ function getDailySchedule(scheduleList, currentDay) {
   }
 }
 
-async function populateSchedule(stopCode, elementId, direction) {
+async function populateSchedule(stopCode, elementId, direction, forceRefresh = false) {
   const scheduleDiv = $(elementId);
   if (!scheduleDiv) return;
 
   try {
-    const schedule = await fetchSchedule(stopCode, direction);
+    const schedule = await fetchSchedule(stopCode, direction, forceRefresh);
     if (!schedule) return;
 
     const currentDay = getCurrentDay();
@@ -965,14 +981,14 @@ async function populateSchedule(stopCode, elementId, direction) {
   }
 }
 
-function refreshAllSchedules() {
-  populateSchedule(14674, "nb-stClairStationAtLowerPlatform-schedule", "1");
-  populateSchedule(5813, "nb-mtPleasantRdAtEglintonAveEastNorthSide-schedule", "1");
-  populateSchedule(5804, "nb-mtPleasantRdatBlythwoodRd-schedule", "1");
+function refreshAllSchedules(forceRefresh = false) {
+  populateSchedule(14674, "nb-stClairStationAtLowerPlatform-schedule", "1", forceRefresh);
+  populateSchedule(5813, "nb-mtPleasantRdAtEglintonAveEastNorthSide-schedule", "1", forceRefresh);
+  populateSchedule(5804, "nb-mtPleasantRdatBlythwoodRd-schedule", "1", forceRefresh);
 
-  populateSchedule(5518, "sb-doncliffeLoopAtGlenEchoRd-schedule", "0");
-  populateSchedule(5827, "sb-mtPleasantRdAtLawrenceAveEastSouthSide-schedule", "0");
-  populateSchedule(5846, "sb-mtPleasantRdAtStibbardAve-schedule", "0");
+  populateSchedule(5518, "sb-doncliffeLoopAtGlenEchoRd-schedule", "0", forceRefresh);
+  populateSchedule(5827, "sb-mtPleasantRdAtLawrenceAveEastSouthSide-schedule", "0", forceRefresh);
+  populateSchedule(5846, "sb-mtPleasantRdAtStibbardAve-schedule", "0", forceRefresh);
 }
 
 /* ==========================================================================
@@ -1122,10 +1138,19 @@ function init() {
   refreshLiveData();
   refreshAllSchedules();
 
-  // Clock ticker every second
+  // Clock ticker every second & midnight day transition detector
   setInterval(() => {
     const timeEl = $('currentTime');
     if (timeEl) timeEl.innerText = getCurrentTime();
+
+    // Check if midnight rolled over to a new calendar day
+    const currentDayStr = new Date().toISOString().split('T')[0];
+    if (currentDayStr !== lastCalendarDate) {
+      console.log(`New calendar day detected (${currentDayStr} vs ${lastCalendarDate}). Fetching fresh daily schedule from TTC API...`);
+      lastCalendarDate = currentDayStr;
+      scheduleMemoryCache.clear();
+      refreshAllSchedules(true); // Force daily network refresh
+    }
   }, 1000);
 
   // Live GPS positions, bus map pins & arrival predictions refresh every 15 seconds
