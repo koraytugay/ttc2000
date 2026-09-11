@@ -12,6 +12,7 @@ const TTC_BASE_URL = "https://www.ttc.ca/ttcapi/routedetail";
 const scheduleMemoryCache = new Map();
 let currentVehicles = [];
 let multiStopPredictions = {};
+const ttcNextBusesByStopCode = new Map();
 
 // Map and layer references
 let map = null;
@@ -558,8 +559,10 @@ function updateHeaderHomePills(nbBuses, sbBuses) {
         }
       } else if (status.approachingBus) {
         distEl.innerText = `#${status.approachingBus.bus.id} • ${formatDistance(status.approachingBus.distance)}`;
+        const ttcData = ttcNextBusesByStopCode.get(homeNbStop.stopCode);
+        const nextMin = ttcData && ttcData[0] ? ttcData[0].nextBusMinutes : null;
         const estMin = Math.max(1, Math.round((status.approachingBus.distance / 1000) / 20 * 60));
-        timeEl.innerText = `~${estMin} min`;
+        timeEl.innerText = nextMin ? `${nextMin} min` : `~${estMin} min`;
         timeEl.style.display = 'inline-block';
       } else {
         distEl.innerText = 'No bus en route';
@@ -589,8 +592,10 @@ function updateHeaderHomePills(nbBuses, sbBuses) {
         }
       } else if (status.approachingBus) {
         distEl.innerText = `#${status.approachingBus.bus.id} • ${formatDistance(status.approachingBus.distance)}`;
+        const ttcData = ttcNextBusesByStopCode.get(homeSbStop.stopCode);
+        const nextMin = ttcData && ttcData[0] ? ttcData[0].nextBusMinutes : null;
         const estMin = Math.max(1, Math.round((status.approachingBus.distance / 1000) / 20 * 60));
-        timeEl.innerText = `~${estMin} min`;
+        timeEl.innerText = nextMin ? `${nextMin} min` : `~${estMin} min`;
         timeEl.style.display = 'inline-block';
       } else {
         distEl.innerText = 'No bus en route';
@@ -605,23 +610,42 @@ function updateHeaderHomePills(nbBuses, sbBuses) {
    ========================================================================== */
 async function fetchPredictions() {
   const allStops = [...TRACKED_STOPS.northbound, ...TRACKED_STOPS.southbound];
-  const stopTagsQuery = allStops.map(s => `stops=103|${s.tag}`).join('&');
-  const url = `${UMOIQ_BASE_URL}?command=predictionsForMultiStops&a=ttc&${stopTagsQuery}`;
 
-  try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      let predsList = data.predictions || [];
-      if (!Array.isArray(predsList)) predsList = [predsList];
-
-      predsList.forEach(p => {
-        multiStopPredictions[p.stopTag] = p;
-      });
+  // 1. Fetch official TTC website API (GetNextBuses) for all tracked stops in parallel
+  // This matches the user's original ttc app 1:1
+  const ttcPromises = allStops.map(async stop => {
+    try {
+      const res = await fetch(`${TTC_BASE_URL}/GetNextBuses?routeId=103&stopCode=${stop.stopCode}`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          ttcNextBusesByStopCode.set(stop.stopCode, data);
+        }
+      }
+    } catch (e) {
+      console.warn(`TTC GetNextBuses fetch failed for stop ${stop.stopCode}:`, e);
     }
-  } catch (err) {
-    console.warn("Multi-stop prediction fetch error, will fallback to TTC API:", err);
-  }
+  });
+
+  // 2. Fetch raw UmoIQ real-time GPS predictions in parallel for vehicle IDs & layover data
+  const stopTagsQuery = allStops.map(s => `stops=103|${s.tag}`).join('&');
+  const umoiqPromise = (async () => {
+    try {
+      const res = await fetch(`${UMOIQ_BASE_URL}?command=predictionsForMultiStops&a=ttc&${stopTagsQuery}`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        let predsList = data.predictions || [];
+        if (!Array.isArray(predsList)) predsList = [predsList];
+        predsList.forEach(p => {
+          multiStopPredictions[p.stopTag] = p;
+        });
+      }
+    } catch (err) {
+      console.warn("UmoIQ prediction fetch error:", err);
+    }
+  })();
+
+  await Promise.allSettled([...ttcPromises, umoiqPromise]);
 
   TRACKED_STOPS.northbound.forEach(stop => populateNextBus(stop));
   TRACKED_STOPS.southbound.forEach(stop => populateNextBus(stop));
@@ -641,18 +665,36 @@ async function populateNextBus(stop) {
 
   let rawPredictions = [];
 
-  // Read prediction feed
+  // 1. Read from official TTC GetNextBuses first (matches original ttc app 1:1)
+  const ttcList = ttcNextBusesByStopCode.get(stop.stopCode);
+  if (ttcList && Array.isArray(ttcList) && ttcList.length > 0) {
+    ttcList.forEach(item => {
+      let m = item.nextBusMinutes;
+      if (m === 'D') m = 'Delayed';
+      else if (m === '0') m = 'Due';
+      rawPredictions.push({
+        minutes: m,
+        scheduledTime: item.scheduledTime,
+        vehicle: null,
+        layover: false,
+        isDeparture: false
+      });
+    });
+  }
+
+  // 2. Read UmoIQ raw GPS feed for vehicle ID & layover metadata, or as fallback
   const predData = multiStopPredictions[stop.tag];
   if (predData && predData.direction) {
     let dirList = predData.direction;
     if (!Array.isArray(dirList)) dirList = [dirList];
 
+    let umoiqList = [];
     dirList.forEach(dirObj => {
       let list = dirObj.prediction || [];
       if (!Array.isArray(list)) list = [list];
       list.forEach(item => {
-        rawPredictions.push({
-          minutes: item.minutes,
+        umoiqList.push({
+          minutes: item.minutes === '0' ? 'Due' : item.minutes,
           seconds: item.seconds,
           vehicle: item.vehicle,
           layover: item.affectedByLayover === 'true',
@@ -660,28 +702,14 @@ async function populateNextBus(stop) {
         });
       });
     });
-  }
 
-  // Fallback to TTC API if empty
-  if (rawPredictions.length === 0) {
-    try {
-      const res = await fetch(`${TTC_BASE_URL}/GetNextBuses?routeId=103&stopCode=${stop.stopCode}`);
-      if (res.ok) {
-        const nextBusInfo = await res.json();
-        if (Array.isArray(nextBusInfo)) {
-          nextBusInfo.forEach(item => {
-            rawPredictions.push({
-              minutes: item.nextBusMinutes === 'D' ? 'Delayed' : item.nextBusMinutes,
-              seconds: null,
-              vehicle: null,
-              layover: false,
-              isDeparture: false
-            });
-          });
-        }
-      }
-    } catch (e) {
-      console.warn(`Fallback fetch failed for stop ${stop.stopCode}:`, e);
+    if (rawPredictions.length === 0) {
+      rawPredictions = umoiqList;
+    } else if (umoiqList.length > 0) {
+      // Enrich with vehicle ID and layover status from UmoIQ
+      rawPredictions[0].vehicle = umoiqList[0].vehicle;
+      rawPredictions[0].layover = umoiqList[0].layover;
+      rawPredictions[0].isDeparture = umoiqList[0].isDeparture;
     }
   }
 
