@@ -541,7 +541,11 @@ function updateStopProximityBanner(stop, candidateBuses, isNorthbound) {
   } else if (status.approachingBus) {
     const { bus, distance, speed } = status.approachingBus;
     const formattedDist = formatDistance(distance);
-    const speedText = speed > 0 ? `moving at ${speed} km/h` : 'in slow traffic / stop';
+    const progress = analyzeVehicleProgress(bus);
+    let speedText = speed > 0 ? `moving at ${speed} km/h` : 'in slow traffic / stop';
+    if (progress && progress.isAtTerminal && speed === 0) {
+      speedText = 'at terminal, departing shortly';
+    }
     textSpan.innerHTML = `<span class="badge-live-status badge-en-route">EN ROUTE</span> Bus <b>#${bus.id}</b> is <b>${formattedDist}</b> away (${speedText})`;
   } else {
     textSpan.innerHTML = `No upcoming bus currently en route in this direction.`;
@@ -552,7 +556,14 @@ function updateStopProximityBanner(stop, candidateBuses, isNorthbound) {
   if (popupStatusEl) {
     if (status.busAtStop) popupStatusEl.innerText = `Bus #${status.busAtStop.bus.id} At Stop`;
     else if (status.terminalLayoverBus) popupStatusEl.innerText = `Bus #${status.terminalLayoverBus.bus.id} at Terminal`;
-    else if (status.approachingBus) popupStatusEl.innerText = `${formatDistance(status.approachingBus.distance)} away`;
+    else if (status.approachingBus) {
+      const progress = analyzeVehicleProgress(status.approachingBus.bus);
+      if (progress && progress.isAtTerminal && status.approachingBus.speed === 0) {
+        popupStatusEl.innerText = `Bus #${status.approachingBus.bus.id} at Terminal (departs soon)`;
+      } else {
+        popupStatusEl.innerText = `${formatDistance(status.approachingBus.distance)} away`;
+      }
+    }
     else popupStatusEl.innerText = `No bus en route`;
   }
 }
@@ -826,7 +837,8 @@ async function populateNextBus(stop) {
     layoverNote.style.fontSize = "0.78rem";
     layoverNote.style.color = "var(--text-muted)";
     layoverNote.style.marginLeft = "6px";
-    layoverNote.innerText = "(departs from terminal)";
+    const terminalName = isNorthbound ? "Eglinton Station" : "Doncliffe Loop";
+    layoverNote.innerText = `(originates at ${terminalName})`;
     nextBusDiv.appendChild(layoverNote);
   }
 }
