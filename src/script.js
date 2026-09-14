@@ -275,7 +275,7 @@ function analyzeVehicleProgress(vehicle) {
    ========================================================================== */
 async function fetchVehicleLocations() {
   try {
-    const url = `${UMOIQ_BASE_URL}?command=vehicleLocations&a=ttc&r=103&t=0`;
+    const url = `${UMOIQ_BASE_URL}?command=vehicleLocations&a=ttc&r=103&t=0&_t=${Date.now()}`;
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Vehicle HTTP error ${res.status}`);
 
@@ -638,7 +638,7 @@ async function fetchPredictions() {
   // This matches the user's original ttc app 1:1
   const ttcPromises = allStops.map(async stop => {
     try {
-      const res = await fetch(`${TTC_BASE_URL}/GetNextBuses?routeId=103&stopCode=${stop.stopCode}`, { cache: 'no-store' });
+      const res = await fetch(`${TTC_BASE_URL}/GetNextBuses?routeId=103&stopCode=${stop.stopCode}&_t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -654,7 +654,7 @@ async function fetchPredictions() {
   const stopTagsQuery = allStops.map(s => `stops=103|${s.tag}`).join('&');
   const umoiqPromise = (async () => {
     try {
-      const res = await fetch(`${UMOIQ_BASE_URL}?command=predictionsForMultiStops&a=ttc&${stopTagsQuery}`, { cache: 'no-store' });
+      const res = await fetch(`${UMOIQ_BASE_URL}?command=predictionsForMultiStops&a=ttc&${stopTagsQuery}&_t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         let predsList = data.predictions || [];
