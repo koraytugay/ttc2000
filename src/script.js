@@ -214,7 +214,7 @@ function setupTrackedStopMarkers() {
       if (cardEl) {
         cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         cardEl.style.transition = 'all 0.3s ease';
-        cardEl.style.borderColor = 'var(--accent-gold)';
+        cardEl.style.borderColor = 'var(--border-focus)';
         setTimeout(() => {
           cardEl.style.borderColor = '';
         }, 1500);

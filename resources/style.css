@@ -478,8 +478,8 @@ html, body {
 }
 
 .stop-card.home-card {
-  border: 1.5px solid var(--accent-gold);
-  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.04) 100%);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
 }
 
 .stop-card-header {
@@ -502,9 +502,10 @@ html, body {
 }
 
 .home-badge {
-  background-color: var(--accent-gold);
-  color: #000000;
-  font-weight: 800;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  font-weight: 700;
   font-size: 0.64rem;
   padding: 2px 6px;
   border-radius: 4px;
@@ -559,9 +560,9 @@ html, body {
 }
 
 .proximity-banner.highlight-proximity {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.3);
-  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
 }
 
 .proximity-icon {
@@ -690,11 +691,11 @@ table.timetable td.next {
 }
 
 .bus-pin.dir-nb {
-  background: #2563eb; /* Northbound blue */
+  background: var(--brand-nb); /* Northbound green #10b981 */
 }
 
 .bus-pin.dir-sb {
-  background: #7c3aed; /* Southbound purple */
+  background: var(--brand-sb); /* Southbound purple #8b5cf6 */
 }
 
 .bus-pin::after {
@@ -732,11 +733,11 @@ table.timetable td.next {
 }
 
 .bus-pin.dir-nb .bus-heading-pointer .heading-cone {
-  border-bottom-color: #60a5fa;
+  border-bottom-color: #34d399; /* Emerald green cone */
 }
 
 .bus-pin.dir-sb .bus-heading-pointer .heading-cone {
-  border-bottom-color: #c084fc;
+  border-bottom-color: #c084fc; /* Lavender purple cone */
 }
 
 .bus-badge-label {
@@ -753,66 +754,67 @@ table.timetable td.next {
   backdrop-filter: blur(4px);
 }
 
-/* Stop Marker Pins */
+/* Stop Marker Pins — Consistent Yellow (#eab308) across all stops */
 .stop-pin {
   width: 24px;
   height: 24px;
   border-radius: 50%;
   background: var(--bg-card);
-  border: 2px solid var(--border-color);
-  color: var(--text-primary);
+  border: 2px solid #eab308;
+  color: #eab308;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.35);
   cursor: pointer;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .stop-pin:hover {
   transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.6);
 }
 
-/* Home Stop Pins (Warm Amber Accent - Refined & Easy on the Eyes) */
+/* Home Stop Pins */
 .stop-pin.home-stop-pin {
   width: 26px;
   height: 26px;
   background: var(--bg-card);
-  color: #f59e0b;
-  border: 2.5px solid #f59e0b;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+  border: 2px solid #eab308;
+  color: #eab308;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.35);
 }
 
 .stop-pin.home-stop-pin:hover {
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.65);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.6);
 }
 
-/* Subway Station Terminal (Eglinton Station - TTC Subway Yellow Ring) */
+/* Subway Station Terminal (Eglinton Station) */
 .stop-pin.station-subway-pin {
   width: 28px;
   height: 28px;
-  background: #1e293b;
+  background: var(--bg-card);
+  border: 2px solid #eab308;
   color: #eab308;
-  border: 2.5px solid #eab308;
-  box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.35);
 }
 
 .stop-pin.station-subway-pin:hover {
-  box-shadow: 0 0 14px rgba(234, 179, 8, 0.65);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.6);
 }
 
-/* Turnaround Loop Terminus (Doncliffe Loop - Purple Terminus Ring) */
+/* Turnaround Loop Terminus (Doncliffe Loop) */
 .stop-pin.loop-terminal-pin {
   width: 26px;
   height: 26px;
-  background: #1e293b;
-  color: #c084fc;
-  border: 2.5px solid #7c3aed;
-  box-shadow: 0 0 10px rgba(124, 58, 237, 0.35);
+  background: var(--bg-card);
+  border: 2px solid #eab308;
+  color: #eab308;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.35);
 }
 
 .stop-pin.loop-terminal-pin:hover {
-  box-shadow: 0 0 14px rgba(124, 58, 237, 0.6);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.6);
 }
 
 /* Leaflet Popup Tweaks */
@@ -981,19 +983,13 @@ table.timetable td.next {
 }
 
 /* Major Transfer Stop Pins */
-.stop-pin.transfer-pin {
+.stop-pin.transfer-pin,
+.stop-pin.transfer-nb,
+.stop-pin.transfer-sb {
   width: 24px;
   height: 24px;
   background: var(--bg-card);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
-.stop-pin.transfer-nb {
-  border: 2px solid var(--brand-nb);
-  color: var(--brand-nb);
-}
-
-.stop-pin.transfer-sb {
-  border: 2px solid var(--brand-sb);
-  color: var(--brand-sb);
+  border: 2px solid #eab308;
+  color: #eab308;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.35);
 }
