@@ -139,26 +139,43 @@ function setupTrackedStopMarkers() {
     ...TRACKED_STOPS.southbound.map(s => ({ ...s, dirLabel: 'Southbound' }))
   ];
 
-  allTracked.forEach(stop => {
+    allTracked.forEach(stop => {
     let pinClass = 'stop-pin';
     let iconSvg = '';
+    let iconSize = [24, 24];
+    let iconAnchor = [12, 12];
+    let popupTitlePrefix = '🚏 ';
 
     if (stop.isHome) {
       pinClass += ' home-stop-pin';
-      iconSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+      iconSize = [26, 26];
+      iconAnchor = [13, 13];
+      popupTitlePrefix = '🏠 ';
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
       </svg>`;
-    } else if (stop.id === 'nb-eglinton' || stop.id === 'sb-doncliffe') {
-      pinClass += ' terminal-pin';
-      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    } else if (stop.id === 'nb-eglinton') {
+      pinClass += ' station-subway-pin';
+      iconSize = [28, 28];
+      iconAnchor = [14, 14];
+      popupTitlePrefix = '🚇 ';
+      iconSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2.5-6H5V7h14v4z"/>
+      </svg>`;
+    } else if (stop.id === 'sb-doncliffe') {
+      pinClass += ' loop-terminal-pin';
+      iconSize = [26, 26];
+      iconAnchor = [13, 13];
+      popupTitlePrefix = '🔄 ';
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
       </svg>`;
     } else {
       // Major transfer stops: Mt Pleasant & Eglinton East (NB) and Mt Pleasant & Lawrence Ave East (SB)
       const dirClass = stop.dirLabel === 'Northbound' ? 'transfer-nb' : 'transfer-sb';
       pinClass += ` transfer-pin ${dirClass}`;
-      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/>
+      iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
       </svg>`;
     }
 
@@ -166,15 +183,15 @@ function setupTrackedStopMarkers() {
     const markerIcon = L.divIcon({
       html: iconHtml,
       className: '',
-      iconSize: stop.isHome ? [28, 28] : [24, 24],
-      iconAnchor: stop.isHome ? [14, 14] : [12, 12]
+      iconSize: iconSize,
+      iconAnchor: iconAnchor
     });
 
     const marker = L.marker([stop.lat, stop.lon], { icon: markerIcon, zIndexOffset: 500 }).addTo(map);
 
     const popupHtml = `
       <div class="popup-card">
-        <div class="popup-title">${stop.isHome ? '🏠 ' : ''}${stop.title}</div>
+        <div class="popup-title">${popupTitlePrefix}${stop.title}</div>
         <div class="popup-row">
           <span>Direction:</span>
           <span class="popup-val">${stop.dirLabel}</span>
@@ -346,8 +363,11 @@ function renderVehiclesOnMap(vehicles) {
     const iconHtml = `
       <div class="bus-marker-wrap">
         <div class="bus-pin ${dirClass}" title="Bus #${vehicle.id}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="transform: rotate(${heading}deg);">
-            <path d="M12 2L4 20l8-4 8 4L12 2z"/>
+          <div class="bus-heading-pointer" style="transform: rotate(${heading}deg);">
+            <span class="heading-cone"></span>
+          </div>
+          <svg class="bus-vehicle-svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/>
           </svg>
         </div>
         <div class="bus-badge-label">
@@ -361,8 +381,8 @@ function renderVehiclesOnMap(vehicles) {
     const customIcon = L.divIcon({
       html: iconHtml,
       className: '',
-      iconSize: [60, 48],
-      iconAnchor: [30, 24]
+      iconSize: [70, 56],
+      iconAnchor: [35, 17]
     });
 
     const popupContent = `
